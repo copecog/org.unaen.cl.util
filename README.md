@@ -1,7 +1,7 @@
-# org.unaen.src.cl.with-dot-slots
+# org.unaen.cl.util
 ### _Christopher H Cope <christopher.h.cope@gmail.com>_
 
-This is a Common Lisp utility to allow access to CLOS object instances with "dot accessors".
+A collection of my own Common Lisp utilities.
 
 ## License
 
