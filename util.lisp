@@ -6,7 +6,7 @@
 (defun inst->slots-list (inst)
   "Take a CLOS instance and returns a list of slot symbols."
   (mapcar #'closer-mop:slot-definition-name
-	  (closer-mop:class-slots (class-of instance))))
+	  (closer-mop:class-slots (class-of inst))))
 
 (defun inst-slot->inst.slot-slot-pair (inst-sym slot-sym)
   "Takes a symbol name place for a CLOS instance and slot, then interns instance-name.slot-name and returns a list pair: (instance-name.slot-name slot-name)."
@@ -23,7 +23,7 @@
 	  (inst->slots-list (eval inst-sym))))
     
 (defmacro with-dot-slots (instance &body body)
-  "Takes a symbol name place for a CLOS instance and body of forms, and then access the respective slots using instance-name.slot-name notation in body."
+  "Takes a symbol name place for a CLOS instance, and body of forms, and allow access of the instances slots using instance-name.slot-name notation in body."
   `(with-slots ,(inst->inst.slot-access-list instance)
        ,instance
      ,@body))
@@ -115,7 +115,7 @@
           ((char> char-iter char2) (nreverse char-list))))))
 
 (defgeneric list->pairs (source-list)
-  (:documentation "Destructure list pairing off objects into sub-lists.")
+  (:documentation "Destructure list, pairing off objects into sub-lists.")
   (:method ((source-list list))
     (labels ((pairs-iter (old-list new-list)
                (if (second old-list)
@@ -164,5 +164,6 @@
   nil)
 
 (defmacro alias (old-call-name new-call-name)
+  "Replace symbol in functional evaluation with another symbol."
   `(defmacro ,new-call-name (&rest args)
      `(,',old-call-name ,@args)))
