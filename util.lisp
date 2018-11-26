@@ -28,6 +28,15 @@
        ,instance
      ,@body))
 
+#| ------- make-func-bind-value-list ----------------------------------------- |#
+
+(defmacro sym-func+val (func-val-pairs)
+  `',(mapcar #'(lambda (func-val-pair)
+                 (list (first func-val-pair)
+                    (list (first func-val-pair)
+                          (second func-val-pair))))
+             func-val-pairs))
+
 #| ------- copy-all ---------------------------------------------------------- |#
 ;;; Ignoring existing copy functions
 (defgeneric copy-all (object)
@@ -40,9 +49,9 @@
 (defmethod copy-all ((obj vector))
   "(Mutable) Vectors: [SIMPLE|BIT|SIMPLE-BIT]-?VECTOR, [SIMPLE|BASE|SIMPLE-BASE]-?STRING"
   (let* ((array-dimensions (array-dimensions obj))
-	 (array-element-type (array-element-type obj))
-	 (adjustable-array-p (adjustable-array-p obj))
-	 (array-has-fill-pointer-p (array-has-fill-pointer-p obj))
+         (array-element-type (array-element-type obj))
+         (adjustable-array-p (adjustable-array-p obj))
+         (array-has-fill-pointer-p (array-has-fill-pointer-p obj))
 	 (fill-pointer (when array-has-fill-pointer-p
 			 (fill-pointer obj))))
     (loop :with new-vector = (make-array array-dimensions
@@ -126,7 +135,7 @@
       (pairs-iter source-list (list)))))
 
 (defgeneric separate-if (predicate-function sequence &rest rest)
-  (:documentation "Separate into not matching and matching lists.")
+  (:documentation "Separate into not matching and matching lists according to the predicate-function.")
   (:method ((predicate function) (sequence sequence) &rest rest)
     (let ((matched (list)))
       (values (apply #'remove-if
@@ -156,10 +165,12 @@
        ,place-before)))
 
 (defun truth (ignored-var)
+  "Accept a single required value and always return true."
   (declare (ignore ignored-var))
   t)
 
 (defun false (ignored-var)
+  "Accept a single required value and always return false."
   (declare (ignore ignored-var))
   nil)
 
