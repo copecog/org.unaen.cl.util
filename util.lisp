@@ -48,12 +48,11 @@
 
 (defmethod copy-all ((obj vector))
   "(Mutable) Vectors: [SIMPLE|BIT|SIMPLE-BIT]-?VECTOR, [SIMPLE|BASE|SIMPLE-BASE]-?STRING"
-  (let* ((array-dimensions (array-dimensions obj))
-         (array-element-type (array-element-type obj))
-         (adjustable-array-p (adjustable-array-p obj))
-         (array-has-fill-pointer-p (array-has-fill-pointer-p obj))
-	 (fill-pointer (when array-has-fill-pointer-p
-			 (fill-pointer obj))))
+  (let* ((#1=array-dimensions (#1# obj))
+         (#2=array-element-type (#2# obj))
+         (#3=adjustable-array-p (#3# obj))
+         (#4=array-has-fill-pointer-p (#4# obj))
+	 (#5=fill-pointer (when #4# (#5# obj))))
     (loop :with new-vector = (make-array array-dimensions
 					 :element-type array-element-type
 					 :adjustable adjustable-array-p
@@ -178,3 +177,4 @@
   "Replace symbol in functional evaluation with another symbol."
   `(defmacro ,new-call-name (&rest args)
      `(,',old-call-name ,@args)))
+
