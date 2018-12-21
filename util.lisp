@@ -178,3 +178,31 @@
   `(defmacro ,new-call-name (&rest args)
      `(,',old-call-name ,@args)))
 
+(defgeneric fib-recur (nth)
+  (:documentation "Return the n'th Fibonacci Number using a recursive function.")
+  (:method ((nth integer))
+    (labels ((fib-iter (n-iter x y)
+               (if (= nth n-iter)
+                   y
+                   (fib-iter (+ n-iter 1)
+                             y
+                             (+ x y)))))
+    (if (>= nth 0)
+        (fib-iter 0 1 0)
+        nil)))
+  (:method ((nth t))
+    nil))
+
+(defgeneric fib-loop (nth)
+  (:documentation "Return the n'th Fibonacci Number using a LOOP.")
+  (:method ((nth integer))
+    (cond ((< nth 0) nil)
+          ((= nth 0) 0)
+          ((> nth 0) (loop
+                        :for x = 0 :then y
+                        :and y = 1 :then (+ x y)
+                        :for n-iter :from 2 :to nth
+                        :finally (return y)))))
+  (:method ((nth t))
+    nil))
+
