@@ -9,7 +9,9 @@
 	  (closer-mop:class-slots (class-of inst))))
 
 (defun inst-slot->inst.slot-slot-pair (inst-sym slot-sym)
-  "Takes a symbol name place for a CLOS instance and slot, then interns instance-name.slot-name and returns a list pair: (instance-name.slot-name slot-name)."
+  "Takes a symbol name place for a CLOS instance and slot, then interns 
+instance-name.slot-name and returns a list pair: 
+(instance-name.slot-name slot-name)."
   (list (intern (string-upcase (concatenate 'string
                                             (symbol-name inst-sym)
                                             "."
@@ -17,37 +19,61 @@
         slot-sym))
 
 (defun inst->inst.slot-access-list (inst-sym)
-  "Take a symbol name place for a CLOS instance and generates the list parameter for with-slots to enable .slot shorthand."
+  "Take a symbol name place for a CLOS instance and generates the list parameter
+ for with-slots to enable .slot shorthand."
   (mapcar #'(lambda (slot-sym)
 	      (inst-slot->inst.slot-slot-pair inst-sym slot-sym))
 	  (inst->slots-list (eval inst-sym))))
     
 (defmacro with-dot-slots (instance &body body)
-  "Takes a symbol name place for a CLOS instance, and body of forms, and allow access of the instances slots using instance-name.slot-name notation in body."
+  "Takes a symbol name place for a CLOS instance, and body of forms, and allow 
+access of the instances slots using instance-name.slot-name notation in body. 
+ONLY USE ON REPL."
   `(with-slots ,(inst->inst.slot-access-list instance)
        ,instance
      ,@body))
 
-#| ------- make-func-bind-value-list ----------------------------------------- |#
+#| ------- multiple-value-call ----------------------------------------------- |#
+(defun |#V-reader| (stream subchar arg)
+  (declare (ignore subchar arg))
+  (let ((func-exp (read stream t nil t)))
+    `(multiple-value-call #',(car func-exp) ,@(cdr func-exp))))
 
-(defmacro sym-func+val (func-val-pairs)
-  `',(mapcar #'(lambda (func-val-pair)
-                 (list (first func-val-pair)
-                    (list (first func-val-pair)
-                          (second func-val-pair))))
-             func-val-pairs))
+(set-dispatch-macro-character #\# #\V #'|#V-reader|)
+
+;;; Rest via https://gist.github.com/informatimago (thanks!)
+(defun |⸨mvc⸩| (stream char)
+  (declare (ignore char))
+  (let ((call (read-delimited-list #\⸩ stream t)))
+    `(multiple-value-call (function ,(first call)) ,@(rest call))))
+
+(set-macro-character #\⸨ (function |⸨mvc⸩|))
+
+#| Emacs Lisp key binding for "⸨", "⸩"
+(local-set-key (kbd "A-(")
+               (lambda (rep)
+                 (interactive "p")
+                 (insert (make-string rep ?⸨))))
+
+(local-set-key (kbd "A-)")
+               (lambda (rep)
+                 (interactive "p")
+                 (insert (make-string rep ?⸩))))
+|#
 
 #| ------- copy-all ---------------------------------------------------------- |#
 ;;; Ignoring existing copy functions
 (defgeneric copy-all (object)
-  (:documentation "A recursive generic function with a method for every built in Common Lisp type to produce a copy."))
+  (:documentation "A recursive generic function with a method for every built in 
+Common Lisp type to produce a copy."))
 
 (defmethod copy-all ((obj cons))
   "(Mutable) Cons Cells: LIST (not (null '(a list))), CONS"
   (loop :for obj->car :in obj :collect (copy-all obj->car)))
 
 (defmethod copy-all ((obj vector))
-  "(Mutable) Vectors: [SIMPLE|BIT|SIMPLE-BIT]-?VECTOR, [SIMPLE|BASE|SIMPLE-BASE]-?STRING"
+  "(Mutable) Vectors: [SIMPLE|BIT|SIMPLE-BIT]-?VECTOR, 
+[SIMPLE|BASE|SIMPLE-BASE]-?STRING"
   (let* ((#1=array-dimensions (#1# obj))
          (#2=array-element-type (#2# obj))
          (#3=adjustable-array-p (#3# obj))
@@ -78,11 +104,13 @@
 	:finally (return new-hash-table)))
 
 (defmethod copy-all ((obj symbol))
-  "(Immutable) Symbols: SYMBOL, NULL (reduce #'eq '() () nil 'nil), KEYWORD, BOOLEAN"
+  "(Immutable) Symbols: SYMBOL, NULL (reduce #'eq '() () nil 'nil), KEYWORD, 
+BOOLEAN"
   obj)
 
 (defmethod copy-all ((obj number))
-  "(Immutable) Numbers: NUMBER, COMPLEX, REAL, [SHORT|SINGLE|DOUBLE|LONG]-?FLOAT, RATIONAL, RATIO, INTEGER, [FIX|BIG]NUM, [SIGNED|UNSIGNED]-BYTE, BIT"
+  "(Immutable) Numbers: NUMBER, COMPLEX, REAL, [SHORT|SINGLE|DOUBLE|LONG]-?FLOAT, 
+RATIONAL, RATIO, INTEGER, [FIX|BIG]NUM, [SIGNED|UNSIGNED]-BYTE, BIT"
   obj)
 
 (defmethod copy-all ((obj character))
@@ -90,22 +118,26 @@
   obj)
 
 #| ------- Misc -------------------------------------------------------------- |#
-(defun file-contents->string (filename)
-  "Function to read file contents and return as a single string."
-  (with-open-file (stream filename)
-    (let ((contents (make-string (file-length stream))))
-      (read-sequence contents stream)
-      contents)))
+(defgeneric file-contents->string (filename)
+  (:documentation "Function to read file contents and return as a single string.")
+  (:method ((filename pathname))
+    (with-open-file (stream filename)
+      (let ((contents (make-string (file-length stream))))
+        (read-sequence contents stream)
+        contents))))
 
-(defun file-lines->list-of-strings (filename)
-  "Function to read file contents and return lines as list of strings."
-  (with-open-file (stream filename)
-    (loop for line = (read-line stream nil)
-          while line
-          collect line)))
+(defgeneric file-lines->list-of-strings (filename)
+  (:documentation "Function to read file contents and return lines as list of 
+strings.")
+  (:method ((filename pathname))
+    (with-open-file (stream filename)
+      (loop for line = (read-line stream nil)
+         while line
+         collect line))))
 
 (defgeneric vector->list-indices-nil/t (vector)
-  (:documentation "Collect unpopulated and populated vector cell indices and return as respective lists.")
+  (:documentation "Collect unpopulated and populated vector cell indices and 
+return as respective lists.")
   (:method ((v vector))
     (loop
        :for x :across v
@@ -115,7 +147,8 @@
        :finally (return (values b a)))))
 
 (defgeneric char-interval->list (char1 char2)
-  (:documentation "Return list of characters on interval between the char1 and char2 character codes inclusive.")
+  (:documentation "Return list of characters on interval between the char1 and 
+char2 character codes inclusive.")
   (:method ((char1 character) (char2 character))
     (when (char< char1 char2)
       (do ((char-iter char1 (code-char (1+ (char-code char-iter))))
@@ -134,7 +167,8 @@
       (pairs-iter source-list (list)))))
 
 (defgeneric separate-if (predicate-function sequence &rest rest)
-  (:documentation "Separate into not matching and matching lists according to the predicate-function.")
+  (:documentation "Separate into not matching and matching lists according to 
+the predicate-function.")
   (:method ((predicate function) (sequence sequence) &rest rest)
     (let ((matched (list)))
       (values (apply #'remove-if
@@ -147,7 +181,8 @@
               (nreverse matched)))))
   
 (defgeneric symbol->list-in-macro (object)
-  (:documentation "Take unevaluated object that is either a list or symbol and make sure it is in-list-ed."))
+  (:documentation "Take unevaluated object that is either a list or symbol and 
+make sure it is in-list-ed."))
 
 (defmethod symbol->list-in-macro ((object symbol))
   (list object))
@@ -178,31 +213,4 @@
   `(defmacro ,new-call-name (&rest args)
      `(,',old-call-name ,@args)))
 
-(defgeneric fib-recur (nth)
-  (:documentation "Return the n'th Fibonacci Number using a recursive function.")
-  (:method ((nth integer))
-    (labels ((fib-iter (n-iter x y)
-               (if (= nth n-iter)
-                   y
-                   (fib-iter (+ n-iter 1)
-                             y
-                             (+ x y)))))
-    (if (>= nth 0)
-        (fib-iter 0 1 0)
-        nil)))
-  (:method ((nth t))
-    nil))
-
-(defgeneric fib-loop (nth)
-  (:documentation "Return the n'th Fibonacci Number using a LOOP.")
-  (:method ((nth integer))
-    (cond ((< nth 0) nil)
-          ((= nth 0) 0)
-          ((> nth 0) (loop
-                        :for x = 0 :then y
-                        :and y = 1 :then (+ x y)
-                        :for n-iter :from 2 :to nth
-                        :finally (return y)))))
-  (:method ((nth t))
-    nil))
 
