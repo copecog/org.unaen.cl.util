@@ -5,6 +5,7 @@
   (:export :inst->slots-list
            :with-dot-slots
            :copy-all
+           :copy-depth
            :file-contents->string
            :file-lines->list-of-strings
            :vector->list-indices-nil/t
@@ -15,4 +16,5 @@
            :plusplus
            :truth
            :false
-           :alias))
+           :alias
+           :do-hash-keys))

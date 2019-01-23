@@ -9,9 +9,9 @@
 	  (closer-mop:class-slots (class-of inst))))
 
 (defun inst-slot->inst.slot-slot-pair (inst-sym slot-sym)
-  "Takes a symbol name place for a CLOS instance and slot, then interns 
-instance-name.slot-name and returns a list pair: 
-(instance-name.slot-name slot-name)."
+  #.(format nil "Takes a symbol name place for a CLOS instance and slot, then ~
+                 interns instance-name.slot-name and returns a list pair: ~
+                 (instance-name.slot-name slot-name).")
   (list (intern (string-upcase (concatenate 'string
                                             (symbol-name inst-sym)
                                             "."
@@ -19,16 +19,16 @@ instance-name.slot-name and returns a list pair:
         slot-sym))
 
 (defun inst->inst.slot-access-list (inst-sym)
-  "Take a symbol name place for a CLOS instance and generates the list parameter
- for with-slots to enable .slot shorthand."
+  #.(format nil "Take a symbol name place for a CLOS instance and generates the ~
+                 list parameter for with-slots to enable .slot shorthand.")
   (mapcar #'(lambda (slot-sym)
 	      (inst-slot->inst.slot-slot-pair inst-sym slot-sym))
 	  (inst->slots-list (eval inst-sym))))
     
 (defmacro with-dot-slots (instance &body body)
-  "Takes a symbol name place for a CLOS instance, and body of forms, and allow 
-access of the instances slots using instance-name.slot-name notation in body. 
-ONLY USE ON REPL."
+  #.(format nil "Takes a symbol name place for a CLOS instance, and body of ~
+                 forms, and allow access of the instances slots using ~
+                 instance-name.slot-name notation in body. ONLY USE ON REPL."
   `(with-slots ,(inst->inst.slot-access-list instance)
        ,instance
      ,@body))
@@ -135,10 +135,11 @@ Common Lisp type to produce a copy."))
 
 (defmethod copy-depth-rec ((obj cons) (depth integer))
   "(Mutable) Cons Cells: LIST (not (null '(a list))), CONS"
-  (loop :for obj->car :in obj :collect (if (= 0 depth)
-                                           obj->car
-                                           (copy-depth-rec obj->car
-                                                           (1- depth)))))
+  (loop
+     :for obj->car :in obj :collect (if (= 0 depth)
+                                        obj->car
+                                        (copy-depth-rec obj->car
+                                                        (1- depth)))))
 
 (defmethod copy-depth-rec ((obj vector) (depth integer))
   "(Mutable) Vectors: [SIMPLE|BIT|SIMPLE-BIT]-?VECTOR, 
@@ -148,39 +149,41 @@ Common Lisp type to produce a copy."))
          (#3=adjustable-array-p (#3# obj))
          (#4=array-has-fill-pointer-p (#4# obj))
 	 (#5=fill-pointer (when #4# (#5# obj))))
-    (loop :with new-vector = (make-array array-dimensions
-					 :element-type array-element-type
-					 :adjustable adjustable-array-p
-					 :fill-pointer fill-pointer)
-	  :for cell-data :across obj
-	  :for cell-int :from 0 :to (if array-has-fill-pointer-p
-					fill-pointer
-					(first array-dimensions))
-          :do (setf (aref new-vector
-                          cell-int)
-		    (if (= 0 depth)
-                        cell-data
-                        (copy-depth-rec cell-data
-                                        (1- depth))))
-	  :finally (return new-vector))))
+    (loop
+       :with new-vector = (make-array array-dimensions
+                                      :element-type array-element-type
+                                      :adjustable adjustable-array-p
+                                      :fill-pointer fill-pointer)
+       :for cell-data :across obj
+       :for cell-int :from 0 :to (if array-has-fill-pointer-p
+                                     fill-pointer
+                                     (first array-dimensions))
+       :do (setf (aref new-vector
+                       cell-int)
+                 (if (= 0 depth)
+                     cell-data
+                     (copy-depth-rec cell-data
+                                     (1- depth))))
+       :finally (return new-vector))))
 
 (defmethod copy-depth-rec ((obj hash-table) (depth integer))
   "(Mutable) Hash Tables: HASH-TABLE"
-  (loop :with new-hash-table = (make-hash-table :test (hash-table-test obj)
-						:size (hash-table-size obj)
-						:rehash-size (hash-table-rehash-size obj)
-						:rehash-threshold (hash-table-rehash-threshold obj))
-	:for hash-key :being :the :hash-keys :of obj :using (:hash-value hash-value)
-        :do (setf (gethash (if (= 0 depth)
-                               hash-key
-                               (copy-depth-rec hash-key
-                                               (1- depth)))
-                           new-hash-table)
-                  (if (= 0 depth)
-                      hash-value
-                      (copy-depth-rec hash-value
-                                      (1- depth))))
-	:finally (return new-hash-table)))
+  (loop
+     :with new-hash-table = (make-hash-table :test (hash-table-test obj)
+                                             :size (hash-table-size obj)
+                                             :rehash-size (hash-table-rehash-size obj)
+                                             :rehash-threshold (hash-table-rehash-threshold obj))
+     :for hash-key :being :the :hash-keys :of obj :using (:hash-value hash-value)
+     :do (setf (gethash (if (= 0 depth)
+                            hash-key
+                            (copy-depth-rec hash-key
+                                            (1- depth)))
+                        new-hash-table)
+               (if (= 0 depth)
+                   hash-value
+                   (copy-depth-rec hash-value
+                                   (1- depth))))
+     :finally (return new-hash-table)))
 
 (defmethod copy-depth-rec ((obj symbol) (depth integer))
   "(Immutable) Symbols: SYMBOL, NULL (reduce #'eq '() () nil 'nil), KEYWORD, 
@@ -292,4 +295,10 @@ make sure it is in-list-ed."))
   `(defmacro ,new-call-name (&rest args)
      `(,',old-call-name ,@args)))
 
-
+(defmacro do-hash-keys ((var table &optional result) &body body)
+  "Iterate over the keys of a hash-table in similar fashion to dolist."
+  `(progn
+     (maphash-keys #'(lambda (,var)
+                       ,@body)
+                   ,table)
+     ,result))
