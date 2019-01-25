@@ -28,7 +28,7 @@
 (defmacro with-dot-slots (instance &body body)
   #.(format nil "Takes a symbol name place for a CLOS instance, and body of ~
                  forms, and allow access of the instances slots using ~
-                 instance-name.slot-name notation in body. ONLY USE ON REPL."
+                 instance-name.slot-name notation in body. ONLY USE ON REPL.")
   `(with-slots ,(inst->inst.slot-access-list instance)
        ,instance
      ,@body))
@@ -298,7 +298,7 @@ make sure it is in-list-ed."))
 (defmacro do-hash-keys ((var table &optional result) &body body)
   "Iterate over the keys of a hash-table in similar fashion to dolist."
   `(progn
-     (maphash-keys #'(lambda (,var)
-                       ,@body)
-                   ,table)
+     (alexandria:maphash-keys #'(lambda (,var)
+                                  ,@body)
+                              ,table)
      ,result))
