@@ -1,0 +1,53 @@
+;;;; org.unaen.cl.util/coercion.lisp
+
+(uiop:define-package #:org.unaen.cl.util/coercion
+    (:use #:common-lisp)
+    (:import-from #:alexandria #:maphash-keys)
+    (:export #:vector->list-indices-nil/t
+             #:char-interval->list
+             #:list->pairs
+             #:symbol->list-in-macro))
+
+(in-package #:org.unaen.cl.util/coercion)
+
+(defgeneric vector->list-indices-nil/t (vector)
+  (:documentation "Collect unpopulated and populated vector cell indices and 
+return as respective lists.")
+  (:method ((v vector))
+    (loop
+       :for x :across v
+       :for i :from 0
+       :if x :collect i :into a
+       :else :collect i :into b
+       :finally (return (values b a)))))
+
+(defgeneric char-interval->list (char1 char2)
+  (:documentation "Return list of characters on interval between the char1 and 
+char2 character codes inclusive.")
+  (:method ((char1 character) (char2 character))
+    (when (char< char1 char2)
+      (do ((char-iter char1 (code-char (1+ (char-code char-iter))))
+           (char-list (list) (push char-iter char-list)))
+          ((char> char-iter char2) (nreverse char-list))))))
+
+(defgeneric list->pairs (source-list)
+  (:documentation "Destructure list, pairing off objects into sub-lists.")
+  (:method ((source-list list))
+    (labels ((pairs-iter (old-list new-list)
+               (if (second old-list)
+                   (pairs-iter (cddr old-list)
+                               (push (list (first old-list) (second old-list))
+                                     new-list))
+                   new-list)))
+      (pairs-iter source-list (list)))))
+  
+(defgeneric symbol->list-in-macro (object)
+  (:documentation "Take unevaluated object that is either a list or symbol and 
+make sure it is in-list-ed."))
+
+(defmethod symbol->list-in-macro ((object symbol))
+  (list object))
+
+(defmethod symbol->list-in-macro ((object list))
+  object)
+
