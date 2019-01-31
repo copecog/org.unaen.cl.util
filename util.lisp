@@ -1,6 +1,27 @@
 ;;;; org.unaen.cl.util.lisp
 
-(in-package #:org.unaen.cl.util)
+(uiop:define-package #:org.unaen.cl.util/util
+    (:use #:common-lisp)
+    (:shadowing-import-from #:closer-mop #:slot-definition-name #:class-slots)
+    (:shadowing-import-from #:alexandria #:maphash-keys)
+    (:export #:inst->slots-list
+             #:with-dot-slots
+             #:copy-all
+             #:copy-depth
+             #:file-contents->string
+             #:file-lines->list-of-strings
+             #:vector->list-indices-nil/t
+             #:char-interval->list
+             #:list->pairs
+             #:separate-if
+             #:symbol->list-in-macro
+             #:plusplus
+             #:truth
+             #:false
+             #:alias
+             #:do-hash-keys))
+
+(in-package #:org.unaen.cl.util/util)
 
 #| ------- with-dot-slots ---------------------------------------------------- |#
 (defun inst->slots-list (inst)
