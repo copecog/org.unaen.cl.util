@@ -1,6 +1,6 @@
 ;;;; org.unaen.cl.util/org.unaen.cl.util.asd
 
-(defsystem #:org.unaen.cl.util
+(defsystem "org.unaen.cl.util"
   :description "My own collection of Common Lisp utilities."
   :author "Christopher H Cope <christopher.h.cope@gmail.com>"
   :license  "MIT"
