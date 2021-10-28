@@ -11,24 +11,35 @@
 (in-package #:org.unaen.cl.util/coercion)
 
 (defgeneric vector->list-indices-nil/t (vector)
-  (:documentation "Collect unpopulated and populated vector cell indices and 
-return as respective lists.")
+  (:documentation "Collect unpopulated and populated vector cell indices and return as respective lists.")
   (:method ((v vector))
-    (loop
-       :for x :across v
-       :for i :from 0
-       :if x :collect i :into a
-       :else :collect i :into b
-       :finally (return (values b a)))))
+    (loop :for x :across v
+	  :for i :from 0
+	  :if x :collect i :into a
+	    :else :collect i :into b
+	  :finally (return (values b a)))))
 
 (defgeneric char-interval->list (char1 char2)
-  (:documentation "Return list of characters on interval between the char1 and 
-char2 character codes inclusive.")
-  (:method ((char1 character) (char2 character))
-    (when (char< char1 char2)
-      (do ((char-iter char1 (code-char (1+ (char-code char-iter))))
-           (char-list (list) (push char-iter char-list)))
-          ((char> char-iter char2) (nreverse char-list))))))
+  (:documentation "Return list of characters on interval between the char1 and char2 character codes inclusive."))
+
+(labels ((char+ (char)
+	   (code-char (1+ (char-code char))))
+	 (char-interval->list (char1 char2)
+	   (loop :for char-iter = char1 :then (char+ char-iter)
+		 :collect char-iter
+		 :until (char= char-iter char2)))
+	 (digitp (n)
+	   (and (integerp n) (<= 0 n 9))))
+  
+  (defmethod char-interval->list ((char1 character) (char2 character))
+    (if (char< char1 char2)
+	(char-interval->list char1 char2)
+	(error "Characters do not make a valid interval.")))
+  
+  (defmethod char-interval->list ((digit1 integer) (digit2 integer))
+    (if (and (digitp digit1) (digitp digit2))
+	(char-interval->list (digit-char digit1) (digit-char digit2))
+	(error "Digits do not make a valid interval."))))
 
 (defgeneric list->pairs (source-list)
   (:documentation "Destructure list, pairing off objects into sub-lists.")
@@ -40,10 +51,9 @@ char2 character codes inclusive.")
                                      new-list))
                    new-list)))
       (pairs-iter source-list (list)))))
-  
+
 (defgeneric symbol->list-in-macro (object)
-  (:documentation "Take unevaluated object that is either a list or symbol and 
-make sure it is in-list-ed."))
+  (:documentation "Take unevaluated object that is either a list or symbol and make sure it is in-list-ed."))
 
 (defmethod symbol->list-in-macro ((object symbol))
   (list object))
