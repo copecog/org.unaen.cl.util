@@ -27,17 +27,15 @@
 	 (char-interval->list (char1 char2)
 	   (loop :for char-iter = char1 :then (char+ char-iter)
 		 :collect char-iter
-		 :until (char= char-iter char2)))
-	 (digitp (n)
-	   (and (integerp n) (<= 0 n 9))))
+		 :until (char= char-iter char2))))
   
   (defmethod char-interval->list ((char1 character) (char2 character))
-    (if (char< char1 char2)
+    (if (char<= char1 char2)
 	(char-interval->list char1 char2)
 	(error "Characters do not make a valid interval.")))
   
   (defmethod char-interval->list ((digit1 integer) (digit2 integer))
-    (if (and (digitp digit1) (digitp digit2) (< digit1 digit2))
+    (if (<= 0 digit1 digit2 9)
 	(char-interval->list (digit-char digit1) (digit-char digit2))
 	(error "Digits do not make a valid interval 0-9."))))
 
