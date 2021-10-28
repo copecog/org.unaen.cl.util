@@ -37,9 +37,9 @@
 	(error "Characters do not make a valid interval.")))
   
   (defmethod char-interval->list ((digit1 integer) (digit2 integer))
-    (if (and (digitp digit1) (digitp digit2))
+    (if (and (digitp digit1) (digitp digit2) (< digit1 digit2))
 	(char-interval->list (digit-char digit1) (digit-char digit2))
-	(error "Digits do not make a valid interval."))))
+	(error "Digits do not make a valid interval 0-9."))))
 
 (defgeneric list->pairs (source-list)
   (:documentation "Destructure list, pairing off objects into sub-lists.")
